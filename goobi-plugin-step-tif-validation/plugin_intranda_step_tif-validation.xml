@@ -1,0 +1,9 @@
+<config_plugin>
+    <config>
+        <project>*</project>
+        <step>*</step>
+        <namepart type="variable">{processtitle}</namepart>
+        <namepart type="static">_</namepart>
+        <namepart type="counter">00000</namepart>
+    </config>
+</config_plugin>

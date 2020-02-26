@@ -1,0 +1,8 @@
+<project name="goobi-plugin-step-metscreation" default="devbuild">
+	<target name="devbuild">
+		<exec executable="mvn">
+			<arg value="package"/>
+		</exec>
+		<copy file="target/plugin_intranda_step_rename-files.jar" todir="/opt/digiverso/goobi/plugins/step/"/>
+	</target>
+</project>
