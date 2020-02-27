@@ -12,6 +12,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
+        <jhove.version>1.20.1</jhove.version>
 	</properties>
 
 
@@ -109,10 +110,22 @@
 	</build>
 
 	<dependencies>
+            <dependency>
+          <groupId>org.openpreservation.jhove</groupId>
+          <artifactId>jhove-core</artifactId>
+          <version>${jhove.version}</version>
+          <scope>provided</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.openpreservation.jhove</groupId>
+          <artifactId>jhove-modules</artifactId>
+          <version>${jhove.version}</version>
+           <scope>provided</scope>
+        </dependency>   
 		<dependency>
 			<groupId>de.intranda.goobi.workflow</groupId>
 			<artifactId>goobi-core-jar</artifactId>
-			<version>3.0.34</version>
+			<version>3.0.38-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>

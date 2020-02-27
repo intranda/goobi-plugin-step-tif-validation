@@ -3,6 +3,6 @@
 		<exec executable="mvn">
 			<arg value="package"/>
 		</exec>
-		<copy file="target/plugin_intranda_step_rename-files.jar" todir="/opt/digiverso/goobi/plugins/step/"/>
+		<copy file="target/plugin_intranda_step_tif-validation.jar" todir="/opt/digiverso/goobi/plugins/step/"/>
 	</target>
 </project>
