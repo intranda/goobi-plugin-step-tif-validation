@@ -28,6 +28,18 @@ public class TifValidationConfiguration {
     @Getter
     private Map<String, Namespace> namespaces;
 
+    @Getter
+    private String jhoveConfigurationFile;
+    @Getter
+    private String stepToOpenInCaseOfErrors;
+    @Getter
+    private boolean validateMasterFolder;
+    @Getter
+    private boolean validateMediaFolder;
+
+    @Getter
+    private boolean lockStepsBetweenCurrentStepAndErrorStep;
+
     public TifValidationConfiguration(SubnodeConfiguration config) {
         this.config = config;
 
@@ -66,6 +78,13 @@ public class TifValidationConfiguration {
                 this.checks.add(new TifValidationResolutionCheck(wanted, errorMessage, mixUri));
             }
         }
+
+        jhoveConfigurationFile = config.getString("jhoveConfiguration", "/opt/digiverso/goobi/config/jhove/jhove.conf");
+        stepToOpenInCaseOfErrors = config.getString("openStepOnError", null);
+        validateMasterFolder = config.getBoolean("validateMasterFolder");
+        validateMediaFolder= config.getBoolean("validateMediaFolder");
+
+        lockStepsBetweenCurrentStepAndErrorStep = config.getBoolean("lockAllStepsBetween");
     }
 
     private void readNamespaces() {

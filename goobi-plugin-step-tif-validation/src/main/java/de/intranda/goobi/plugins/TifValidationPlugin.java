@@ -15,6 +15,7 @@ import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
+import org.apache.commons.lang.StringUtils;
 import org.goobi.beans.LogEntry;
 import org.goobi.beans.Process;
 import org.goobi.beans.Step;
@@ -26,14 +27,17 @@ import org.goobi.production.enums.StepReturnValue;
 import org.goobi.production.plugin.interfaces.IStepPluginVersion2;
 import org.jdom2.Document;
 import org.jdom2.JDOMException;
-import org.jdom2.Namespace;
 import org.jdom2.input.SAXBuilder;
 
 import de.intranda.goobi.plugins.checks.TifValidationCheck;
 import de.sub.goobi.config.ConfigPlugins;
 import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.StorageProvider;
+import de.sub.goobi.helper.enums.StepEditType;
+import de.sub.goobi.helper.enums.StepStatus;
+import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.persistence.managers.ProcessManager;
+import de.sub.goobi.persistence.managers.StepManager;
 import edu.harvard.hul.ois.jhove.App;
 import edu.harvard.hul.ois.jhove.JhoveBase;
 import edu.harvard.hul.ois.jhove.Module;
@@ -49,12 +53,23 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
     private Process process;
     private String returnPath;
 
-    private static final Namespace jhove = Namespace.getNamespace("jhove", "http://hul.harvard.edu/ois/xml/ns/jhove");
-
     private TifValidationConfiguration configuration;
 
     @Override
     public PluginReturnValue run() {
+
+        if (!configuration.isValidateMasterFolder() && !configuration.isValidateMediaFolder()) {
+            // nothing to validate, continue
+            LogEntry entry = LogEntry.build(process.getId())
+                    .withCreationDate(new Date())
+                    .withType(LogType.DEBUG)
+                    .withUsername("")
+                    .withContent("Validation is deactivated for master and media folder.");
+            ProcessManager.saveLogEntry(entry);
+
+            return PluginReturnValue.FINISH;
+        }
+
         // get folder list
         try {
             Calendar calendar = Calendar.getInstance();
@@ -63,34 +78,36 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
 
             JhoveBase jhoveBase = new JhoveBase();
 
-            File jhoveConfigFile =
-                    new File("/home/robert/git/goobi-plugin-step-tif-validation/goobi-plugin-step-tif-validation/src/main/resources/jhove.conf");
-            jhoveBase.init(jhoveConfigFile.getAbsolutePath(), null);
+            File jhoveConfigFile = new File(configuration.getJhoveConfigurationFile());
 
+            jhoveBase.init(jhoveConfigFile.getAbsolutePath(), null);
+            //            Path template = Paths.get(ConfigProjectsTest.class.getClassLoader().getResource(".").getFile());
+            //            String goobiFolder = template.getParent().getParent().getParent().toString() + "/test/resources/";
             Path outputPath = Files.createTempDirectory("jhove");
             List<SimpleEntry<String, String>> inputOutputList = new ArrayList<>();
 
-            //            File outputFile = File.createTempFile("jhove", "output");
             Module module = jhoveBase.getModule(null);
-            OutputHandler aboutHandler = jhoveBase.getHandler(null);
             OutputHandler xmlHandler = jhoveBase.getHandler("XML");
 
             jhoveBase.setEncoding("utf-8");
-            //            jhoveBase.setTempDirectory("/tmp");
             jhoveBase.setBufferSize(4096);
             jhoveBase.setChecksumFlag(false);
             jhoveBase.setShowRawFlag(true);
             jhoveBase.setSignatureFlag(false);
+            List<Path> imagesInFolder = new ArrayList<>();
 
-            List<Path> imagesInFolder = StorageProvider.getInstance().listFiles("/opt/digiverso/goobi/metadata/34696/images/808840800_media/");
-            List<String> filenameList = new ArrayList<>(imagesInFolder.size());
+            if (configuration.isValidateMasterFolder()) {
+                imagesInFolder.addAll(StorageProvider.getInstance().listFiles(process.getImagesOrigDirectory(false)));
+            }
+            if (configuration.isValidateMediaFolder()) {
+                imagesInFolder.addAll(StorageProvider.getInstance().listFiles(process.getImagesTifDirectory(false)));
+            }
+
             for (Path image : imagesInFolder) {
-                filenameList.add(image.toString());
                 String inputName = image.getFileName().toString();
                 String outputName = inputName.substring(0, inputName.lastIndexOf('.')) + ".xml";
                 Path fOutputPath = outputPath.resolve(outputName);
                 inputOutputList.add(new SimpleEntry<>(image.toString(), fOutputPath.toString()));
-
             }
 
             for (SimpleEntry<String, String> se : inputOutputList) {
@@ -98,7 +115,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
                     jhoveBase.dispatch(app, module, null, xmlHandler, se.getValue(), new String[] { se.getKey() });
                 } catch (Exception e) {
                     handleException(e);
-                    return PluginReturnValue.ERROR;
+                    return PluginReturnValue.WAIT;
                 }
             }
 
@@ -121,18 +138,20 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
                     }
                 } catch (JDOMException | IOException | IllegalStateException e) {
                     handleException(e);
-                    return PluginReturnValue.ERROR;
+                    return PluginReturnValue.WAIT;
                 }
             }
             if (error) {
-                String errorMessage = "One or more images did not validate";
+                String errorMessage = "One or more images did not validate.";
                 handleValidationError(errorMessage);
-                return PluginReturnValue.ERROR;
+                openConfiguredTask(outputPath);
+                return PluginReturnValue.WAIT;
             }
 
+            StorageProvider.getInstance().deleteDir(outputPath);
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             log.error(e);
+            return PluginReturnValue.ERROR;
         }
 
         Helper.setMeldung("Tif validation finished.");
@@ -146,15 +165,88 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
         return PluginReturnValue.FINISH;
     }
 
+    private void openConfiguredTask(Path outputFolder) throws DAOException {
+
+        StorageProvider.getInstance().deleteDir(outputFolder);
+
+        Step stepToOpen = null;
+        // find configured step
+        if (StringUtils.isNotBlank(configuration.getStepToOpenInCaseOfErrors())) {
+            for (Step stepInProcess : process.getSchritte()) {
+                if (stepInProcess.getTitel().equalsIgnoreCase(configuration.getStepToOpenInCaseOfErrors())) {
+                    stepToOpen = stepInProcess;
+                    break;
+                }
+            }
+        }
+        // if step not found or was not configured, find last closed step
+        if (stepToOpen == null) {
+            for (Step stepInProcess : process.getSchritte()) {
+                if (stepInProcess.getTitel().equals(step.getTitel())) {
+                    break;
+                }
+                if (stepToOpen == null || stepToOpen.getReihenfolge() <= stepInProcess.getReihenfolge()) {
+                    stepToOpen = stepInProcess;
+                }
+            }
+        }
+
+
+
+
+        // found no step to lockse, set status of the current step to error
+        if (stepToOpen == null) {
+            step.setBearbeitungsstatusEnum(StepStatus.ERROR);
+        } else {
+            // close steps between step to open and current step
+            if (configuration.isLockStepsBetweenCurrentStepAndErrorStep()) {
+                List<Step> stepsToClose = new ArrayList<>();
+                for (Step stepInProcess : process.getSchritte()) {
+                    if (stepInProcess.getReihenfolge() > stepToOpen.getReihenfolge() && stepInProcess.getReihenfolge() <= step.getReihenfolge()) {
+                        stepsToClose.add(stepInProcess);
+                    }
+                }
+                for (Step stepBetween : stepsToClose) {
+                    stepBetween.setBearbeitungsstatusEnum(StepStatus.LOCKED);
+                    StepManager.saveStep(stepBetween);
+                }
+
+            }
+
+            // set the current step to locked, open the previous step
+            step.setBearbeitungsstatusEnum(StepStatus.LOCKED);
+            stepToOpen.setBearbeitungsstatusEnum(StepStatus.OPEN);
+            StepManager.saveStep(stepToOpen);
+            LogEntry entry = LogEntry.build(process.getId())
+                    .withCreationDate(new Date())
+                    .withType(LogType.DEBUG)
+                    .withUsername("")
+                    .withContent("Open task " + stepToOpen.getTitel() + " because of validation errors.");
+            ProcessManager.saveLogEntry(entry);
+        }
+
+        step.setEditTypeEnum(StepEditType.MANUAL_SINGLE);
+        StepManager.saveStep(step);
+
+    }
+
     private void handleValidationError(String message) {
 
-        // TODO abort, open previous/named step in error state, write error message
+        LogEntry entry = LogEntry.build(process.getId()).withCreationDate(new Date()).withType(LogType.ERROR).withUsername("").withContent(message);
+        ProcessManager.saveLogEntry(entry);
 
     }
 
     private void handleException(Exception e) {
         log.error(e);
-        handleValidationError(e.getMessage());
+
+        LogEntry entry = LogEntry.build(process.getId())
+                .withCreationDate(new Date())
+                .withType(LogType.ERROR)
+                .withUsername("")
+                .withContent("Tif validation failed with an error. " + e.getMessage());
+        ProcessManager.saveLogEntry(entry);
+
     }
 
     @Override
@@ -173,7 +265,6 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
 
     @Override
     public String finish() {
-        run();
         return returnPath;
     }
 

@@ -3,55 +3,34 @@
         <project>*</project>
         <step>*</step>
         <validateMasterFolder>true</validateMasterFolder>
-        <validateMediaFolder>true</validateMediaFolder>
+        <validateMediaFolder>false</validateMediaFolder>
         <openStepOnError>Scanning</openStepOnError>
-        
+        <lockAllStepsBetween>true</lockAllStepsBetween>
+        <jhoveConfiguration>/opt/digiverso/goobi/config/jhove/jhove.conf</jhoveConfiguration>
         <namespace uri="http://www.loc.gov/mix/v20" name="mix" />
         <namespace uri="http://hul.harvard.edu/ois/xml/ns/jhove" name="jhove" />
-        <!--Counter check-->
+        <!--Counter check -->
         <check>
-            <xpath>
-                count(//jhove:repInfo/jhove:format)
-            </xpath>
-            <wanted>
-                1.0
-            </wanted>
-            <error_message>
-                Check for image format count: Image: "${image}" Wanted value: "${wanted}"\, found value: "${found}".
-            </error_message>
+            <xpath>count(//jhove:repInfo/jhove:format)</xpath>
+            <wanted>1.0</wanted>
+            <error_message>Check for image format count: Image: "${image}" Wanted value: "${wanted}"\, found value: "${found}".</error_message>
         </check>
         <check>
-            <xpath>
-                string(//jhove:repInfo/jhove:format)
-            </xpath>
-            <wanted>
-                TIFF
-            </wanted>
-            <error_message>
-                Check for image format: Image: "${image}" Wanted value: "${wanted}"\, found value: "${found}".
-            </error_message>
+            <xpath>string(//jhove:repInfo/jhove:format)</xpath>
+            <wanted>TIFF</wanted>
+            <error_message> Check for image format: Image: "${image}" Wanted value: "${wanted}"\, found value: "${found}".</error_message>
         </check>
-        <!--Check if the image is well-formed and valid-->
+        <!--Check if the image is well-formed and valid -->
         <check>
-            <xpath>
-                //jhove:repInfo/jhove:status
-    	</xpath>
-            <wanted>
-                Well-Formed and valid
-            </wanted>
-            <error_message>
-                Check for image status: Image: "${image}" Wanted value: "${wanted}"\, found value: "${found}".
-            </error_message>
+            <xpath>//jhove:repInfo/jhove:status</xpath>
+            <wanted>Well-Formed and valid</wanted>
+            <error_message> Check for image status: Image: "${image}" Wanted value: "${wanted}"\, found value: "${found}".</error_message>
         </check>
-        <!--Check for resolution (number or range)-->
+        <!--Check for resolution (number or range) -->
         <integrated_check name="resolution_check">
-    	<mix_uri>http://www.loc.gov/mix/v20</mix_uri>
-            <wanted>
-                100.0-899.23
-            </wanted>
-            <error_message>
-                Check for resolution: Image: "${image}" Wanted value: "${wanted}"\, found value: "${found}".
-            </error_message>
+            <mix_uri>http://www.loc.gov/mix/v20</mix_uri>
+            <wanted>100.0-899.23</wanted>
+            <error_message> Check for resolution: Image: "${image}" Wanted value: "${wanted}"\, found value: "${found}".</error_message>
         </integrated_check>
     </config>
 </config_plugin>
