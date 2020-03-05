@@ -208,6 +208,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
                 }
                 for (Step stepBetween : stepsToClose) {
                     stepBetween.setBearbeitungsstatusEnum(StepStatus.LOCKED);
+                    stepBetween.setPrioritaet(10);
                     StepManager.saveStep(stepBetween);
                 }
 
@@ -215,7 +216,8 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
 
             // set the current step to locked, open the previous step
             step.setBearbeitungsstatusEnum(StepStatus.LOCKED);
-            stepToOpen.setBearbeitungsstatusEnum(StepStatus.OPEN);
+            stepToOpen.setBearbeitungsstatusEnum(StepStatus.ERROR);
+            stepToOpen.setPrioritaet(10);
             StepManager.saveStep(stepToOpen);
             LogEntry entry = LogEntry.build(process.getId())
                     .withCreationDate(new Date())
