@@ -110,22 +110,11 @@
 	</build>
 
 	<dependencies>
-            <dependency>
-          <groupId>org.openpreservation.jhove</groupId>
-          <artifactId>jhove-core</artifactId>
-          <version>${jhove.version}</version>
-          <scope>provided</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.openpreservation.jhove</groupId>
-          <artifactId>jhove-modules</artifactId>
-          <version>${jhove.version}</version>
-           <scope>provided</scope>
-        </dependency>   
+            
 		<dependency>
 			<groupId>de.intranda.goobi.workflow</groupId>
 			<artifactId>goobi-core-jar</artifactId>
-			<version>3.0.44</version>
+			<version>3.0.45-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
