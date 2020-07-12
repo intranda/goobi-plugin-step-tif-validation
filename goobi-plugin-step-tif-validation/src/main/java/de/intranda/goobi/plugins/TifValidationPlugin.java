@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -58,16 +59,15 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
     @Override
     public PluginReturnValue run() {
 
-        if (!configuration.isValidateMasterFolder() && !configuration.isValidateMediaFolder()) {
+        if (configuration.getFolders() == null || configuration.getFolders().size() == 0) {
             // nothing to validate, continue
             LogEntry entry = LogEntry.build(process.getId())
                     .withCreationDate(new Date())
-                    .withType(LogType.DEBUG)
+                    .withType(LogType.ERROR)
                     .withUsername("")
-                    .withContent("Validation is deactivated for master and media folder.");
+                    .withContent("No folder configured to be validated with JHove validation.");
             ProcessManager.saveLogEntry(entry);
-
-            return PluginReturnValue.FINISH;
+            return PluginReturnValue.ERROR;
         }
 
         // get folder list
@@ -96,11 +96,8 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
             jhoveBase.setSignatureFlag(false);
             List<Path> imagesInFolder = new ArrayList<>();
 
-            if (configuration.isValidateMasterFolder()) {
-                imagesInFolder.addAll(StorageProvider.getInstance().listFiles(process.getImagesOrigDirectory(false)));
-            }
-            if (configuration.isValidateMediaFolder()) {
-                imagesInFolder.addAll(StorageProvider.getInstance().listFiles(process.getImagesTifDirectory(false)));
+            for (String f : configuration.getFolders()) {
+            	imagesInFolder.addAll(StorageProvider.getInstance().listFiles(process.getConfiguredImageFolder(f)));
             }
 
             for (Path image : imagesInFolder) {

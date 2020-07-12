@@ -2,14 +2,14 @@
     <config>
         <project>*</project>
         <step>*</step>
-        <validateMasterFolder>true</validateMasterFolder>
-        <validateMediaFolder>false</validateMediaFolder>
+        <!-- folders to validate, can be multiple one (e.g. master, main etc. -->
+        <folder>master</folder>
         <openStepOnError>Scanning</openStepOnError>
         <lockAllStepsBetween>true</lockAllStepsBetween>
         <jhoveConfiguration>/opt/digiverso/goobi/config/jhove/jhove.conf</jhoveConfiguration>
         <namespace uri="http://www.loc.gov/mix/v20" name="mix" />
         <namespace uri="http://hul.harvard.edu/ois/xml/ns/jhove" name="jhove" />
-        <!--Counter check -->
+        <!-- Counter check -->
         <check>
             <xpath>count(//jhove:repInfo/jhove:format)</xpath>
             <wanted>1.0</wanted>

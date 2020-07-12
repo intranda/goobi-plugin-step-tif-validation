@@ -1,6 +1,7 @@
 package de.intranda.goobi.plugins;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,10 +34,8 @@ public class TifValidationConfiguration {
     @Getter
     private String stepToOpenInCaseOfErrors;
     @Getter
-    private boolean validateMasterFolder;
-    @Getter
-    private boolean validateMediaFolder;
-
+    private List<String> folders = null;
+    
     @Getter
     private boolean lockStepsBetweenCurrentStepAndErrorStep;
 
@@ -81,9 +80,7 @@ public class TifValidationConfiguration {
 
         jhoveConfigurationFile = config.getString("jhoveConfiguration", "/opt/digiverso/goobi/config/jhove/jhove.conf");
         stepToOpenInCaseOfErrors = config.getString("openStepOnError", null);
-        validateMasterFolder = config.getBoolean("validateMasterFolder");
-        validateMediaFolder= config.getBoolean("validateMediaFolder");
-
+        folders = Arrays.asList(config.getStringArray("folder"));
         lockStepsBetweenCurrentStepAndErrorStep = config.getBoolean("lockAllStepsBetween");
     }
 
