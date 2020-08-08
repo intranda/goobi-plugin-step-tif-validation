@@ -13,9 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.configuration.SubnodeConfiguration;
-import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
-import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
 import org.apache.commons.lang.StringUtils;
 import org.goobi.beans.LogEntry;
 import org.goobi.beans.Process;
@@ -83,7 +80,9 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
             jhoveBase.init(jhoveConfigFile.getAbsolutePath(), null);
             //            Path template = Paths.get(ConfigProjectsTest.class.getClassLoader().getResource(".").getFile());
             //            String goobiFolder = template.getParent().getParent().getParent().toString() + "/test/resources/";
-            Path outputPath = Files.createTempDirectory("jhove");
+            Path outputPath = Paths.get(process.getProcessDataDirectory(), "validation", System.currentTimeMillis() + "_jhove");
+            Files.createDirectories(outputPath);
+            
             List<SimpleEntry<String, String>> inputOutputList = new ArrayList<>();
 
             Module module = jhoveBase.getModule(null);
@@ -139,13 +138,11 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
                 }
             }
             if (error) {
-                String errorMessage = "One or more images did not validate.";
+                String errorMessage = "The validation of the images was not successfull.";
                 handleValidationError(errorMessage);
                 openConfiguredTask(outputPath);
                 return PluginReturnValue.WAIT;
             }
-
-            StorageProvider.getInstance().deleteDir(outputPath);
         } catch (Exception e) {
             log.error(e);
             return PluginReturnValue.ERROR;
@@ -158,14 +155,10 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
                 .withUsername("")
                 .withContent("Tif validation finished.");
         ProcessManager.saveLogEntry(entry);
-
         return PluginReturnValue.FINISH;
     }
 
     private void openConfiguredTask(Path outputFolder) throws DAOException {
-
-        StorageProvider.getInstance().deleteDir(outputFolder);
-
         Step stepToOpen = null;
         // find configured step
         if (StringUtils.isNotBlank(configuration.getStepToOpenInCaseOfErrors())) {
@@ -187,9 +180,6 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
                 }
             }
         }
-
-
-
 
         // found no step to lockse, set status of the current step to error
         if (stepToOpen == null) {
@@ -226,26 +216,21 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
 
         step.setEditTypeEnum(StepEditType.MANUAL_SINGLE);
         StepManager.saveStep(step);
-
     }
 
     private void handleValidationError(String message) {
-
         LogEntry entry = LogEntry.build(process.getId()).withCreationDate(new Date()).withType(LogType.ERROR).withUsername("").withContent(message);
         ProcessManager.saveLogEntry(entry);
-
     }
 
     private void handleException(Exception e) {
         log.error(e);
-
         LogEntry entry = LogEntry.build(process.getId())
                 .withCreationDate(new Date())
                 .withType(LogType.ERROR)
                 .withUsername("")
-                .withContent("Tif validation failed with an error. " + e.getMessage());
+                .withContent("The image validation failed with an error. " + e.getMessage());
         ProcessManager.saveLogEntry(entry);
-
     }
 
     @Override
@@ -287,33 +272,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
         this.step = step;
         this.process = step.getProzess();
         this.returnPath = returnPath;
-
-        String projectName = process.getProjekt().getTitel();
-
-        XMLConfiguration xmlConfig = ConfigPlugins.getPluginConfig(getTitle());
-        xmlConfig.setExpressionEngine(new XPathExpressionEngine());
-        xmlConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
-
-        SubnodeConfiguration myconfig = null;
-
-        // order of configuration is:
-        // 1.) project name and step name matches
-        // 2.) step name matches and project is *
-        // 3.) project name matches and step name is *
-        // 4.) project name and step name are *
-        try {
-            myconfig = xmlConfig.configurationAt("//config[./project = '" + projectName + "'][./step = '" + step.getTitel() + "']");
-        } catch (IllegalArgumentException e) {
-            try {
-                myconfig = xmlConfig.configurationAt("//config[./project = '*'][./step = '" + step.getTitel() + "']");
-            } catch (IllegalArgumentException e1) {
-                try {
-                    myconfig = xmlConfig.configurationAt("//config[./project = '" + projectName + "'][./step = '*']");
-                } catch (IllegalArgumentException e2) {
-                    myconfig = xmlConfig.configurationAt("//config[./project = '*'][./step = '*']");
-                }
-            }
-        }
+        SubnodeConfiguration myconfig = ConfigPlugins.getProjectAndStepConfig(getTitle(), step);
         configuration = new TifValidationConfiguration(myconfig);
     }
 
