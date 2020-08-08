@@ -26,6 +26,18 @@
             <wanted>Well-Formed and valid</wanted>
             <error_message> Check status for "${image}": Expected value "${wanted}", but found value "${found}".</error_message>
         </check>
+        <!--Check the color profile -->
+        <check>
+            <xpath>string(//mix:iccProfileName)</xpath>
+            <wanted>Adobe RGB (1998)</wanted>
+            <error_message> Check color profile for "${image}": Expected value "${wanted}", but found value "${found}".</error_message>
+        </check>
+        <!--Check color depth -->
+        <check>
+            <xpath>string(//mix:bitsPerSampleValue[1])</xpath>
+            <wanted>16</wanted>
+            <error_message> Check color depth for "${image}": Expected value "${wanted}", but found value "${found}".</error_message>
+        </check>
         <!--Check for resolution (number or range) -->
         <integrated_check name="resolution_check">
             <mix_uri>http://www.loc.gov/mix/v20</mix_uri>
