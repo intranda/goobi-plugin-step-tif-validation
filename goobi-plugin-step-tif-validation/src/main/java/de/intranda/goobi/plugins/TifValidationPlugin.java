@@ -40,6 +40,7 @@ import edu.harvard.hul.ois.jhove.App;
 import edu.harvard.hul.ois.jhove.JhoveBase;
 import edu.harvard.hul.ois.jhove.Module;
 import edu.harvard.hul.ois.jhove.OutputHandler;
+import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
 
@@ -47,6 +48,9 @@ import net.xeoh.plugins.base.annotations.PluginImplementation;
 @PluginImplementation
 public class TifValidationPlugin implements IStepPluginVersion2 {
 
+    @Getter
+    private String title = "intranda_step_tif_validation";
+    
     private Step step;
     private Process process;
     private String returnPath;
@@ -62,7 +66,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
                     .withCreationDate(new Date())
                     .withType(LogType.ERROR)
                     .withUsername("")
-                    .withContent("No folder configured to be validated with JHove validation.");
+                    .withContent("No folder configured to be validated with TIF validation.");
             ProcessManager.saveLogEntry(entry);
             return PluginReturnValue.ERROR;
         }
@@ -279,11 +283,6 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
     @Override
     public HashMap<String, StepReturnValue> validate() {
         return null;
-    }
-
-    @Override
-    public String getTitle() {
-        return "intranda_step_jhove-validation";
     }
 
     @Override
