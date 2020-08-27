@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.lang.StringUtils;
+import org.goobi.beans.ErrorProperty;
 import org.goobi.beans.LogEntry;
 import org.goobi.beans.Process;
 import org.goobi.beans.Step;
@@ -31,6 +32,7 @@ import de.intranda.goobi.plugins.checks.TifValidationCheck;
 import de.sub.goobi.config.ConfigPlugins;
 import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.StorageProvider;
+import de.sub.goobi.helper.enums.PropertyType;
 import de.sub.goobi.helper.enums.StepEditType;
 import de.sub.goobi.helper.enums.StepStatus;
 import de.sub.goobi.helper.exceptions.DAOException;
@@ -50,7 +52,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
 
     @Getter
     private String title = "intranda_step_tif_validation";
-    
+
     private Step step;
     private Process process;
     private String returnPath;
@@ -86,7 +88,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
             //            String goobiFolder = template.getParent().getParent().getParent().toString() + "/test/resources/";
             Path outputPath = Paths.get(process.getProcessDataDirectory(), "validation", System.currentTimeMillis() + "_jhove");
             Files.createDirectories(outputPath);
-            
+
             List<SimpleEntry<String, String>> inputOutputList = new ArrayList<>();
 
             Module module = jhoveBase.getModule(null);
@@ -100,7 +102,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
             List<Path> imagesInFolder = new ArrayList<>();
 
             for (String f : configuration.getFolders()) {
-            	imagesInFolder.addAll(StorageProvider.getInstance().listFiles(process.getConfiguredImageFolder(f)));
+                imagesInFolder.addAll(StorageProvider.getInstance().listFiles(process.getConfiguredImageFolder(f)));
             }
 
             for (Path image : imagesInFolder) {
@@ -144,7 +146,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
             if (error) {
                 String errorMessage = "The validation of the images was not successfull.";
                 handleValidationError(errorMessage);
-                openConfiguredTask(outputPath);
+                openConfiguredTask(outputPath, errorMessage);
                 return PluginReturnValue.WAIT;
             }
         } catch (Exception e) {
@@ -162,7 +164,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
         return PluginReturnValue.FINISH;
     }
 
-    private void openConfiguredTask(Path outputFolder) throws DAOException {
+    private void openConfiguredTask(Path outputFolder, String errorMessage) throws DAOException {
         Step stepToOpen = null;
         // find configured step
         if (StringUtils.isNotBlank(configuration.getStepToOpenInCaseOfErrors())) {
@@ -184,10 +186,15 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
                 }
             }
         }
-
+        ErrorProperty se = new ErrorProperty();
+        se.setTitel(Helper.getTranslation("Korrektur notwendig"));
+        se.setWert(errorMessage);
+        se.setType(PropertyType.messageError);
         // found no step to lockse, set status of the current step to error
         if (stepToOpen == null) {
             step.setBearbeitungsstatusEnum(StepStatus.ERROR);
+            se.setSchritt(step);
+            step.getEigenschaften().add(se);
         } else {
             // close steps between step to open and current step
             if (configuration.isLockStepsBetweenCurrentStepAndErrorStep()) {
@@ -202,13 +209,14 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
                     stepBetween.setPrioritaet(10);
                     StepManager.saveStep(stepBetween);
                 }
-
             }
 
             // set the current step to locked, open the previous step
             step.setBearbeitungsstatusEnum(StepStatus.LOCKED);
             stepToOpen.setBearbeitungsstatusEnum(StepStatus.ERROR);
             stepToOpen.setPrioritaet(10);
+            se.setSchritt(stepToOpen);
+            stepToOpen.getEigenschaften().add(se);
             StepManager.saveStep(stepToOpen);
             LogEntry entry = LogEntry.build(process.getId())
                     .withCreationDate(new Date())
