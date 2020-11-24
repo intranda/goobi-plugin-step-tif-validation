@@ -115,7 +115,7 @@
 		<dependency>
 			<groupId>de.intranda.goobi.workflow</groupId>
 			<artifactId>goobi-core-jar</artifactId>
-			<version>3.0.58</version>
+			<version>3.0.59</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
