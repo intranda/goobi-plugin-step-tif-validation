@@ -60,3 +60,23 @@ jobs:
         asset_path: plugin/plugin_intranda_step_tif_validation.xml
         asset_name: plugin_intranda_step_tif_validation.xml
         asset_content_type: text/xml
+    - name: Upload Config asset2
+      id: upload-config-asset2
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: plugin/jhoveConfig.xsd
+        asset_name: jhoveConfig.xsd
+        asset_content_type: text/xml
+    - name: Upload Config asset3
+      id: upload-config-asset3
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: plugin/jhove.conf
+        asset_name: jhove.conf
+        asset_content_type: text/plain
