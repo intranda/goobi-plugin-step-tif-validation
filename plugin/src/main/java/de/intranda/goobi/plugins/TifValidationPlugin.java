@@ -31,6 +31,7 @@ import org.jdom2.input.SAXBuilder;
 import de.intranda.goobi.plugins.checks.TifValidationCheck;
 import de.sub.goobi.config.ConfigPlugins;
 import de.sub.goobi.helper.Helper;
+import de.sub.goobi.helper.NIOFileUtils;
 import de.sub.goobi.helper.StorageProvider;
 import de.sub.goobi.helper.enums.PropertyType;
 import de.sub.goobi.helper.enums.StepEditType;
@@ -102,7 +103,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
             List<Path> imagesInFolder = new ArrayList<>();
 
             for (String f : configuration.getFolders()) {
-                imagesInFolder.addAll(StorageProvider.getInstance().listFiles(process.getConfiguredImageFolder(f)));
+                imagesInFolder.addAll(StorageProvider.getInstance().listFiles(process.getConfiguredImageFolder(f), NIOFileUtils.imageNameFilter));
             }
 
             for (Path image : imagesInFolder) {
