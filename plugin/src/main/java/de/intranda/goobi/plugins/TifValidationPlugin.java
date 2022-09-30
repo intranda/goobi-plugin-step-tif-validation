@@ -8,14 +8,12 @@ import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.goobi.beans.ErrorProperty;
-import org.goobi.beans.LogEntry;
 import org.goobi.beans.Process;
 import org.goobi.beans.Step;
 import org.goobi.production.enums.LogType;
@@ -37,7 +35,6 @@ import de.sub.goobi.helper.enums.PropertyType;
 import de.sub.goobi.helper.enums.StepEditType;
 import de.sub.goobi.helper.enums.StepStatus;
 import de.sub.goobi.helper.exceptions.DAOException;
-import de.sub.goobi.persistence.managers.ProcessManager;
 import de.sub.goobi.persistence.managers.StepManager;
 import edu.harvard.hul.ois.jhove.App;
 import edu.harvard.hul.ois.jhove.JhoveBase;
@@ -65,12 +62,9 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
 
         if (configuration.getFolders() == null || configuration.getFolders().size() == 0) {
             // nothing to validate, continue
-            LogEntry entry = LogEntry.build(process.getId())
-                    .withCreationDate(new Date())
-                    .withType(LogType.ERROR)
-                    .withUsername("")
-                    .withContent("No folder configured to be validated with TIF validation.");
-            ProcessManager.saveLogEntry(entry);
+
+            Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, "No folder configured to be validated with TIF validation.", "");
+
             return PluginReturnValue.ERROR;
         }
 
@@ -156,12 +150,8 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
         }
 
         Helper.setMeldung("Tif validation finished.");
-        LogEntry entry = LogEntry.build(process.getId())
-                .withCreationDate(new Date())
-                .withType(LogType.DEBUG)
-                .withUsername("")
-                .withContent("Tif validation finished.");
-        ProcessManager.saveLogEntry(entry);
+        Helper.addMessageToProcessJournal(process.getId(), LogType.DEBUG, "Tif validation finished.", "");
+
         return PluginReturnValue.FINISH;
     }
 
@@ -219,12 +209,10 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
             se.setSchritt(stepToOpen);
             stepToOpen.getEigenschaften().add(se);
             StepManager.saveStep(stepToOpen);
-            LogEntry entry = LogEntry.build(process.getId())
-                    .withCreationDate(new Date())
-                    .withType(LogType.DEBUG)
-                    .withUsername("")
-                    .withContent("Open task " + stepToOpen.getTitel() + " because of validation errors.");
-            ProcessManager.saveLogEntry(entry);
+
+            Helper.addMessageToProcessJournal(process.getId(), LogType.DEBUG, "Open task " + stepToOpen.getTitel() + " because of validation errors.",
+                    "");
+
         }
 
         step.setEditTypeEnum(StepEditType.MANUAL_SINGLE);
@@ -232,18 +220,12 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
     }
 
     private void handleValidationError(String message) {
-        LogEntry entry = LogEntry.build(process.getId()).withCreationDate(new Date()).withType(LogType.ERROR).withUsername("").withContent(message);
-        ProcessManager.saveLogEntry(entry);
+        Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, message, "");
     }
 
     private void handleException(Exception e) {
         log.error(e);
-        LogEntry entry = LogEntry.build(process.getId())
-                .withCreationDate(new Date())
-                .withType(LogType.ERROR)
-                .withUsername("")
-                .withContent("The image validation failed with an error. " + e.getMessage());
-        ProcessManager.saveLogEntry(entry);
+        Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, "The image validation failed with an error. " + e.getMessage(), "");
     }
 
     @Override
