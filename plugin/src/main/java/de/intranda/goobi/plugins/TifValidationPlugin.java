@@ -180,7 +180,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
         ErrorProperty se = new ErrorProperty();
         se.setTitel(Helper.getTranslation("Korrektur notwendig"));
         se.setWert(errorMessage);
-        se.setType(PropertyType.messageError);
+        se.setType(PropertyType.MESSAGE_ERROR);
         // found no step to lockse, set status of the current step to error
         if (stepToOpen == null) {
             step.setBearbeitungsstatusEnum(StepStatus.ERROR);
@@ -235,7 +235,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
 
     @Override
     public boolean execute() {
-        if (run().equals(PluginReturnValue.FINISH)) {
+        if (PluginReturnValue.FINISH.equals(run())) {
             return true;
         } else {
             return false;
