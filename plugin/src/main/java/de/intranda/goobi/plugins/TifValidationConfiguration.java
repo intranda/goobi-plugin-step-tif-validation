@@ -64,7 +64,7 @@ public class TifValidationConfiguration {
                 }
                 nsSet.add(ns);
             }
-            String wanted = hc.getString("wanted");
+            String wanted = replacer.replace(hc.getString("wanted"));
             String errorMessage = hc.getString("error_message");
             this.checks.add(new TifValidationSimpleXpathCheck(nsSet, xpath, wanted, errorMessage));
         }
