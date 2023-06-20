@@ -17,6 +17,7 @@ import org.jdom2.Namespace;
 import de.intranda.goobi.plugins.checks.TifValidationCheck;
 import de.intranda.goobi.plugins.checks.TifValidationResolutionCheck;
 import de.intranda.goobi.plugins.checks.TifValidationSimpleXpathCheck;
+import de.sub.goobi.helper.VariableReplacer;
 import lombok.Getter;
 
 public class TifValidationConfiguration {
@@ -35,13 +36,15 @@ public class TifValidationConfiguration {
     private String stepToOpenInCaseOfErrors;
     @Getter
     private List<String> folders = null;
-    
+
     @Getter
     private boolean lockStepsBetweenCurrentStepAndErrorStep;
 
-    public TifValidationConfiguration(SubnodeConfiguration config) {
-        this.config = config;
+    private VariableReplacer replacer;
 
+    public TifValidationConfiguration(SubnodeConfiguration config, VariableReplacer replacer) {
+        this.config = config;
+        this.replacer = replacer;
         readNamespaces();
         readChecks();
     }
@@ -71,7 +74,7 @@ public class TifValidationConfiguration {
         for (HierarchicalConfiguration hc : checkList) {
             String type = hc.getString("@name");
             if (TifValidationResolutionCheck.NAME.equals(type)) {
-                String wanted = hc.getString("wanted");
+                String wanted = replacer.replace(hc.getString("wanted"));
                 String errorMessage = hc.getString("error_message");
                 String mixUri = hc.getString("mix_uri");
                 this.checks.add(new TifValidationResolutionCheck(wanted, errorMessage, mixUri));

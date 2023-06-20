@@ -31,10 +31,13 @@ import de.sub.goobi.config.ConfigPlugins;
 import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.NIOFileUtils;
 import de.sub.goobi.helper.StorageProvider;
+import de.sub.goobi.helper.VariableReplacer;
+import de.sub.goobi.helper.XmlTools;
 import de.sub.goobi.helper.enums.PropertyType;
 import de.sub.goobi.helper.enums.StepEditType;
 import de.sub.goobi.helper.enums.StepStatus;
 import de.sub.goobi.helper.exceptions.DAOException;
+import de.sub.goobi.helper.exceptions.SwapException;
 import de.sub.goobi.persistence.managers.StepManager;
 import edu.harvard.hul.ois.jhove.App;
 import edu.harvard.hul.ois.jhove.JhoveBase;
@@ -43,10 +46,15 @@ import edu.harvard.hul.ois.jhove.OutputHandler;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
+import ugh.dl.DigitalDocument;
+import ugh.dl.Fileformat;
+import ugh.exceptions.UGHException;
 
 @Log4j2
 @PluginImplementation
 public class TifValidationPlugin implements IStepPluginVersion2 {
+
+    private static final long serialVersionUID = 7056713235306414554L;
 
     @Getter
     private String title = "intranda_step_tif_validation";
@@ -55,12 +63,12 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
     private Process process;
     private String returnPath;
 
-    private TifValidationConfiguration configuration;
+    private transient TifValidationConfiguration configuration;
 
     @Override
     public PluginReturnValue run() {
 
-        if (configuration.getFolders() == null || configuration.getFolders().size() == 0) {
+        if (configuration.getFolders() == null || configuration.getFolders().isEmpty()) {
             // nothing to validate, continue
 
             Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, "No folder configured to be validated with TIF validation.", "");
@@ -79,8 +87,6 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
             File jhoveConfigFile = new File(configuration.getJhoveConfigurationFile());
 
             jhoveBase.init(jhoveConfigFile.getAbsolutePath(), null);
-            //            Path template = Paths.get(ConfigProjectsTest.class.getClassLoader().getResource(".").getFile());
-            //            String goobiFolder = template.getParent().getParent().getParent().toString() + "/test/resources/";
             Path outputPath = Paths.get(process.getProcessDataDirectory(), "validation", System.currentTimeMillis() + "_jhove");
             Files.createDirectories(outputPath);
 
@@ -116,7 +122,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
                 }
             }
 
-            SAXBuilder jdomBuilder = new SAXBuilder();
+            SAXBuilder jdomBuilder = XmlTools.getSAXBuilder();
             Document jdomDocument;
             boolean error = false;
 
@@ -141,7 +147,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
             if (error) {
                 String errorMessage = "The validation of the images was not successfull.";
                 handleValidationError(errorMessage);
-                openConfiguredTask(outputPath, errorMessage);
+                openConfiguredTask( errorMessage);
                 return PluginReturnValue.WAIT;
             }
         } catch (Exception e) {
@@ -155,7 +161,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
         return PluginReturnValue.FINISH;
     }
 
-    private void openConfiguredTask(Path outputFolder, String errorMessage) throws DAOException {
+    private void openConfiguredTask(String errorMessage) throws DAOException {
         Step stepToOpen = null;
         // find configured step
         if (StringUtils.isNotBlank(configuration.getStepToOpenInCaseOfErrors())) {
@@ -235,11 +241,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
 
     @Override
     public boolean execute() {
-        if (PluginReturnValue.FINISH.equals(run())) {
-            return true;
-        } else {
-            return false;
-        }
+        return PluginReturnValue.FINISH.equals(run());
     }
 
     @Override
@@ -268,12 +270,24 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
         this.process = step.getProzess();
         this.returnPath = returnPath;
         SubnodeConfiguration myconfig = ConfigPlugins.getProjectAndStepConfig(getTitle(), step);
-        configuration = new TifValidationConfiguration(myconfig);
+
+        Fileformat fileformat = null;
+        DigitalDocument dd = null;
+        try {
+            fileformat = process.readMetadataFile();
+            dd = fileformat.getDigitalDocument();
+        } catch (UGHException | IOException | SwapException e) {
+            log.error(e);
+        }
+
+        VariableReplacer replacer = new VariableReplacer(dd, process.getRegelsatz().getPreferences(), process, step);
+
+        configuration = new TifValidationConfiguration(myconfig, replacer);
     }
 
     @Override
     public HashMap<String, StepReturnValue> validate() {
-        return null;
+        return null; // NOSONAR
     }
 
     @Override
