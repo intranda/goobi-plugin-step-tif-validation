@@ -147,7 +147,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
             if (error) {
                 String errorMessage = "The validation of the images was not successfull.";
                 handleValidationError(errorMessage);
-                openConfiguredTask( errorMessage);
+                openConfiguredTask(errorMessage);
                 return PluginReturnValue.WAIT;
             }
         } catch (Exception e) {
@@ -156,7 +156,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
         }
 
         Helper.setMeldung("Tif validation finished.");
-        Helper.addMessageToProcessJournal(process.getId(), LogType.DEBUG, "Tif validation finished.", "");
+        Helper.addMessageToProcessJournal(process.getId(), LogType.INFO, "The image validation finished successfully.", "");
 
         return PluginReturnValue.FINISH;
     }
