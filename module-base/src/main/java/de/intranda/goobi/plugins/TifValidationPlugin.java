@@ -71,7 +71,8 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
         if (configuration.getFolders() == null || configuration.getFolders().isEmpty()) {
             // nothing to validate, continue
 
-            Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, "No folder configured to be validated with TIF validation.", "");
+            Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, "No folder configured to be validated with TIF validation.",
+                    "Image Validation");
 
             return PluginReturnValue.ERROR;
         }
@@ -156,7 +157,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
         }
 
         Helper.setMeldung("Tif validation finished.");
-        Helper.addMessageToProcessJournal(process.getId(), LogType.INFO, "The image validation finished successfully.", "");
+        Helper.addMessageToProcessJournal(process.getId(), LogType.INFO, "The image validation finished successfully.", "Image Validation");
 
         return PluginReturnValue.FINISH;
     }
@@ -217,7 +218,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
             StepManager.saveStep(stepToOpen);
 
             Helper.addMessageToProcessJournal(process.getId(), LogType.DEBUG, "Open task " + stepToOpen.getTitel() + " because of validation errors.",
-                    "");
+                    "Image Validation");
 
         }
 
@@ -226,12 +227,13 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
     }
 
     private void handleValidationError(String message) {
-        Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, message, "");
+        Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, message, "Image Validation");
     }
 
     private void handleException(Exception e) {
         log.error(e);
-        Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, "The image validation failed with an error. " + e.getMessage(), "");
+        Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, "The image validation failed with an error. " + e.getMessage(),
+                "Image Validation");
     }
 
     @Override

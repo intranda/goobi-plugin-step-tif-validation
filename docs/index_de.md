@@ -46,53 +46,17 @@ Dieses Plugin wird in den Workflow so integriert, dass es automatisch ausgeführ
 ## Konfiguration
 Die Konfiguration für das Plugin erfolgt innerhalb der zentralen Konfigurationsdatei. Sie sieht beispielhaft wie folgt aus:
 
-```xml
-<config_plugin>
-    <config>
-        <project>*</project>
-        <step>*</step>
-        <!-- folders to validate, can be multiple one (e.g. master, main etc. -->
-        <folder>master</folder>
-        <openStepOnError>Scanning</openStepOnError>
-        <lockAllStepsBetween>true</lockAllStepsBetween>
-        <jhoveConfiguration>/opt/digiverso/goobi/config/jhove/jhove.conf</jhoveConfiguration>
-        <namespace uri="http://www.loc.gov/mix/v20" name="mix" />
-        <namespace uri="http://hul.harvard.edu/ois/xml/ns/jhove" name="jhove" />
-        <!--Counter check -->
-        <check>
-            <xpath>count(//jhove:repInfo/jhove:format)</xpath>
-            <wanted>1.0</wanted>
-            <error_message>Check for image format count: Image: "${image}" Wanted value: "${wanted}"\, found value: "${found}".</error_message>
-        </check>
-        <check>
-            <xpath>string(//jhove:repInfo/jhove:format)</xpath>
-            <wanted>TIFF</wanted>
-            <error_message> Check for image format: Image: "${image}" Wanted value: "${wanted}"\, found value: "${found}".</error_message>
-        </check>
-        <!--Check if the image is well-formed and valid -->
-        <check>
-            <xpath>//jhove:repInfo/jhove:status</xpath>
-            <wanted>Well-Formed and valid</wanted>
-            <error_message> Check for image status: Image: "${image}" Wanted value: "${wanted}"\, found value: "${found}".</error_message>
-        </check>
-        <!--Check for resolution (number or range) -->
-        <integrated_check name="resolution_check">
-            <mix_uri>http://www.loc.gov/mix/v20</mix_uri>
-            <wanted>100.0-899.23</wanted>
-            <error_message> Check for resolution: Image: "${image}" Wanted value: "${wanted}"\, found value: "${found}".</error_message>
-        </integrated_check>
-    </config>
-</config_plugin>
-```
+
+{{CONFIG_CONTENT}}
+
+{{CONFIG_DESCRIPTION_PROJECT_STEP}}
 
 Die Parameter innerhalb der zentralen Konfigurationsdatei des Plugins haben folgende Bedeutungen:
 
-| Wert | Beschreibung |
-| :--- | :--- |
-| `project` | Dieser Parameter legt fest, für welches Projekt der aktuelle Block `<config>` gelten soll. Verwendet wird hierbei der Name des Projektes. Dieser Parameter kann mehrfach pro `<config>` Block vorkommen. |
-| `step` | Dieser Parameter steuert, für welche Arbeitsschritte der Block `<config>` gelten soll. Verwendet wird hier der Name des Arbeitsschritts. Dieser Parameter kann mehrfach pro `<config>` Block vorkommen. |
-| `folder` | Mit diesem Parameter können Verzeichnisse festgelegt werden, deren Inhalte validiert werden sollen. Dieser Parameter kann wiederholt vorkommen. Mögliche Werte hierfür sind z.B. `master`, `media` oder auch individuelle Ordner wie `photos` und `scans`. |
-| `openStepOnError` | Dieser Parameter legt fest, welcher Arbeitsschritt des Workflows erneut geöffnet werden soll, wenn ein Fehler innerhalb der Validierung auftritt. Wird dieser Parameter nicht verwendet, so aktiviert das Plugin stattdessen einfach den vorherigen Arbeitsschritt des Validierungsschritts. |
-| `lockAllStepsBetween` | Mit diesem Parameter wird festgelegt, ob die Arbeitsschritte des Workflows zwischen dem Validierungsschritt und demjenigen, der innerhalb des Parameters `openStepOnError` angegeben wurde, wieder auf auf den Status gesperrt gesetzt werden sollen, so dass diese Arbeitsschritte ein erneutes Mal durchlaufen (`true`) werden müssen. Wird der Wert hingegen auf `false` gesetzt, so wird der Status der dazwischen liegenden Schritte nicht verändert, so dass die Arbeitsschritte auch nicht noch einmal durchlaufen werden. |
-| `jhoveConfiguration` | Mit diesem Parameter wird angegeben, wo sich die Konfigurationsdatei für JHove befindet. |
-| `check` | Innerhalb eines jeden Elements check wird festgelegt, was JHove genau validieren soll. Hier wird beispielsweise festgelegt, welches Dateiformat erwartet wird. Zugehörig ist hierbei ebenso, welche Fehlermeldung im Falle einer fehlerhaften Validierung ausgegeben werden soll. In der Fehlermeldung können folgende Variablen genutzt werden: `${wanted}` für den Inhalt aus dem Feld `<wanted>`, `${exected}` für den erwarteten Wert, `${found}` für den gefundenen Wert und `${image}` für den Dateinamen. |
+Parameter         | Erläuterung
+------------------|----------------------------------------
+`folder` | Mit diesem Parameter können Verzeichnisse festgelegt werden, deren Inhalte validiert werden sollen. Dieser Parameter kann wiederholt vorkommen. Mögliche Werte hierfür sind z.B. `master`, `media` oder auch individuelle Ordner wie `photos` und `scans`.
+`openStepOnError` | Dieser Parameter legt fest, welcher Arbeitsschritt des Workflows erneut geöffnet werden soll, wenn ein Fehler innerhalb der Validierung auftritt. Wird dieser Parameter nicht verwendet, so aktiviert das Plugin stattdessen einfach den vorherigen Arbeitsschritt des Validierungsschritts.
+`lockAllStepsBetween` | Mit diesem Parameter wird festgelegt, ob die Arbeitsschritte des Workflows zwischen dem Validierungsschritt und demjenigen, der innerhalb des Parameters `openStepOnError` angegeben wurde, wieder auf auf den Status gesperrt gesetzt werden sollen, so dass diese Arbeitsschritte ein erneutes Mal durchlaufen (`true`) werden müssen. Wird der Wert hingegen auf `false` gesetzt, so wird der Status der dazwischen liegenden Schritte nicht verändert, so dass die Arbeitsschritte auch nicht noch einmal durchlaufen werden.
+`jhoveConfiguration` | Mit diesem Parameter wird angegeben, wo sich die Konfigurationsdatei für JHove befindet.
+`check` | Innerhalb eines jeden Elements check wird festgelegt, was JHove genau validieren soll. Hier wird beispielsweise festgelegt, welches Dateiformat erwartet wird. Für den erwarteten Wert kann innerhalb des Elements `<wanted>` eine direkte Eingabe auch als Bereich erfasst werden. Ebenso ist es hier auch möglich, eine Variable zu verwenden, die durch den Variablen-Replacer ersetzt wird (z.B. `{process.Resolution}`. Zugehörig ist hierbei ebenso, welche Fehlermeldung im Falle einer fehlerhaften Validierung ausgegeben werden soll. In der Fehlermeldung können folgende Variablen genutzt werden: `${wanted}` für den exakten Inhalt aus dem Feld `<wanted>`, `${expected}` für den aufgelösten erwarteten Wert, `${found}` für den gefundenen Wert und `${image}` für den Dateinamen.
