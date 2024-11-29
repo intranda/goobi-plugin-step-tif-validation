@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;
+import org.apache.commons.lang3.StringUtils;
 import org.jdom2.Namespace;
 
 import de.intranda.goobi.plugins.checks.TifValidationCheck;
@@ -64,9 +65,33 @@ public class TifValidationConfiguration {
                 }
                 nsSet.add(ns);
             }
-            String wanted = replacer.replace(hc.getString("wanted"));
+
             String errorMessage = hc.getString("error_message");
-            this.checks.add(new TifValidationSimpleXpathCheck(nsSet, xpath, wanted, errorMessage));
+
+            for (HierarchicalConfiguration wanted : hc.configurationsAt("wanted")) {
+                String conditionMatch = wanted.getString("/condition/@matches");
+                String conditionField = wanted.getString("/condition/@value");
+
+                String val = wanted.getString("@value");
+                if (StringUtils.isBlank(val)) {
+                    val = wanted.getString(".");
+                }
+                String wantedValue = replacer.replace(val);
+
+                boolean match = true;
+                if (StringUtils.isNotBlank(conditionField) && StringUtils.isNotBlank(conditionMatch)) {
+                    match = false;
+                    String actualValue = replacer.replace(conditionField);
+                    if (StringUtils.isNotBlank(actualValue) && actualValue.matches(conditionMatch)) {
+                        match = true;
+                    }
+                }
+                if (match) {
+                    this.checks.add(new TifValidationSimpleXpathCheck(nsSet, xpath, wantedValue, errorMessage));
+                    break;
+                }
+            }
+
         }
 
         //ADD NEW CHECKS HERE
@@ -74,10 +99,33 @@ public class TifValidationConfiguration {
         for (HierarchicalConfiguration hc : checkList) {
             String type = hc.getString("@name");
             if (TifValidationResolutionCheck.NAME.equals(type)) {
-                String wanted = replacer.replace(hc.getString("wanted"));
                 String errorMessage = hc.getString("error_message");
                 String mixUri = hc.getString("mix_uri");
-                this.checks.add(new TifValidationResolutionCheck(wanted, errorMessage, mixUri));
+
+                for (HierarchicalConfiguration wanted : hc.configurationsAt("wanted")) {
+                    String conditionMatch = wanted.getString("/condition/@matches");
+                    String conditionField = wanted.getString("/condition/@value");
+
+                    String val = wanted.getString("@value");
+                    if (StringUtils.isBlank(val)) {
+                        val = wanted.getString(".");
+                    }
+
+                    String wantedValue = replacer.replace(val);
+
+                    boolean match = true;
+                    if (StringUtils.isNotBlank(conditionField) && StringUtils.isNotBlank(conditionMatch)) {
+                        match = false;
+                        String actualValue = replacer.replace(conditionField);
+                        if (StringUtils.isNotBlank(actualValue) && actualValue.matches(conditionMatch)) {
+                            match = true;
+                        }
+                    }
+                    if (match) {
+                        this.checks.add(new TifValidationResolutionCheck(wantedValue, errorMessage, mixUri));
+                        break;
+                    }
+                }
             }
         }
 
