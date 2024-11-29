@@ -22,7 +22,7 @@ public class TifValidationSimpleXpathCheck implements TifValidationCheck {
     private static XPathFactory xFactory = XPathFactory.instance();
 
     private Set<Namespace> namespaces;
-    private XPathExpression xpath;
+    private XPathExpression<Object> xpath;
     private String expectedValue;
     private String errorMessage;
     private Map<String, String> replaceMap;
@@ -37,11 +37,10 @@ public class TifValidationSimpleXpathCheck implements TifValidationCheck {
     }
 
     public static String validateXPath(String path) {
-        if (StringUtils.isNotBlank(path)) {
-            if (!path.matches("\\w+\\(.+\\)")) {
-                path = "string(" + path + ")";
-            }
+        if (StringUtils.isNotBlank(path) && !path.matches("\\w+\\(.+\\)")) {
+            path = "string(" + path + ")";
         }
+
         return path;
     }
 
@@ -53,18 +52,17 @@ public class TifValidationSimpleXpathCheck implements TifValidationCheck {
     @Override
     public boolean check(Document doc) {
         Object value = xpath.evaluateFirst(doc);
-        if (value instanceof Element) {
-            value = ((Element) value).getTextTrim();
-        } else if (value instanceof Attribute) {
-            value = ((Attribute) value).getValue();
-        } else if (value instanceof Text) {
-            value = ((Text) value).getText();
+        if (value instanceof Element e) {
+            value = e.getTextTrim();
+        } else if (value instanceof Attribute a) {
+            value = a.getValue();
+        } else if (value instanceof Text t) {
+            value = t.getText();
         } else if (!(value instanceof String)) {
             value = value.toString();
         }
         this.replaceMap.put("found", (String) value);
-        return this.expectedValue.equals(value) || (value != null && value instanceof String && ((String) value).matches(this.expectedValue));
-        //        return this.expectedValue.equals(value);
+        return this.expectedValue.equals(value) || (value instanceof String s && s.matches(this.expectedValue));
     }
 
     @Override

@@ -16,7 +16,7 @@ import de.intranda.goobi.plugins.checks.numbers.ValueRange;
 import de.intranda.goobi.plugins.checks.numbers.ValueRangeFactory;
 
 public class TifValidationResolutionCheck implements TifValidationCheck {
-    public static String NAME = "resolution_check";
+    public static final String NAME = "resolution_check";
 
     private static Namespace jhove = Namespace.getNamespace("jhove", "http://hul.harvard.edu/ois/xml/ns/jhove");
 
