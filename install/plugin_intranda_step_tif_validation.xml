@@ -13,36 +13,36 @@
         <check>
             <xpath>count(//jhove:repInfo/jhove:format)</xpath>
             <wanted>1.0</wanted>
-            <error_message>Check format count for "${image}": Expected value "${exected}", but found value "${found}".</error_message>
+            <error_message>Check format count for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
         </check>
         <check>
             <xpath>string(//jhove:repInfo/jhove:format)</xpath>
             <wanted>TIFF</wanted>
-            <error_message> Check format for "${image}": Expected value "${exected}", but found value "${found}".</error_message>
+            <error_message> Check format for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
         </check>
         <!--Check if the image is well-formed and valid -->
         <check>
             <xpath>//jhove:repInfo/jhove:status</xpath>
             <wanted>Well-Formed and valid</wanted>
-            <error_message> Check status for "${image}": Expected value "${exected}", but found value "${found}".</error_message>
+            <error_message> Check status for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
         </check>
         <!--Check the color profile -->
         <check>
             <xpath>string(//mix:iccProfileName)</xpath>
             <wanted>Adobe RGB (1998)</wanted>
-            <error_message> Check color profile for "${image}": Expected value "${exected}", but found value "${found}".</error_message>
+            <error_message> Check color profile for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
         </check>
         <!--Check color depth -->
         <check>
             <xpath>string(//mix:bitsPerSampleValue[1])</xpath>
             <wanted>16</wanted>
-            <error_message> Check color depth for "${image}": Expected value "${exected}", but found value "${found}".</error_message>
+            <error_message> Check color depth for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
         </check>
         <!--Check for resolution (number or range) -->
         <integrated_check name="resolution_check">
             <mix_uri>http://www.loc.gov/mix/v20</mix_uri>
             <wanted>100.0-899.23</wanted>
-            <error_message> Check resolution for "${image}": Expected value "${exected}", but found value "${found}".</error_message>
+            <error_message> Check resolution for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
         </integrated_check>
     </config>
 </config_plugin>

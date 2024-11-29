@@ -46,7 +46,7 @@ public class TifValidationSimpleXpathCheck implements TifValidationCheck {
 
     private void createReplaceMap() {
         this.replaceMap = new HashMap<>();
-        this.replaceMap.put("exected", this.expectedValue);
+        this.replaceMap.put("expected", this.expectedValue);
     }
 
     @Override
