@@ -27,6 +27,7 @@ public class TifValidationSimpleXpathCheck implements TifValidationCheck {
     private String errorMessage;
     private Map<String, String> replaceMap;
 
+    // possible values: equals, greater, lesser, exists, not exists, same
     private String checkType = "equals";
 
     public TifValidationSimpleXpathCheck(Set<Namespace> namespaces, String xpath, String expectedValue, String errorMessage) {
@@ -54,6 +55,10 @@ public class TifValidationSimpleXpathCheck implements TifValidationCheck {
     @Override
     public boolean check(Document doc) {
         Object value = xpath.evaluateFirst(doc);
+        if (value == null) {
+            return "not exists".equals(checkType);
+        }
+
         if (value instanceof Element e) {
             value = e.getTextTrim();
         } else if (value instanceof Attribute a) {
@@ -66,6 +71,9 @@ public class TifValidationSimpleXpathCheck implements TifValidationCheck {
         this.replaceMap.put("found", (String) value);
 
         switch (checkType) {
+            case "exists":
+                return true;
+
             case "equals": {
                 return this.expectedValue.equals(value) || (value instanceof String s && s.matches(this.expectedValue));
             }
