@@ -41,6 +41,17 @@
         <!--Check for resolution (number or range) -->
         <integrated_check name="resolution_check">
             <mix_uri>http://www.loc.gov/mix/v20</mix_uri>
+            <!-- get the value from the property 'Resolution' -->
+            <wanted value="{process.Resolution}">
+            <!-- only when 'Resolution' contains a numeric value -->
+                <condition value="{process.Resolution}" matches="^\d+" />
+            </wanted>
+            <!-- get the value from a different field, if 'Resolution' contains the value 'other' --> 
+            <wanted value="{process.Special Resolution}">
+                <condition value="{process.Resolution}" matches="other" />
+            </wanted>
+            <!-- default configuration that is used if none of the above conditions apply. 
+            If no default configuration exists and no condition applies, the check is not executed -->
             <wanted>100.0-899.23</wanted>
             <error_message> Check resolution for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
         </integrated_check>
