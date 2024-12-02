@@ -27,6 +27,8 @@ public class TifValidationSimpleXpathCheck implements TifValidationCheck {
     private String errorMessage;
     private Map<String, String> replaceMap;
 
+    private String checkType = "equals";
+
     public TifValidationSimpleXpathCheck(Set<Namespace> namespaces, String xpath, String expectedValue, String errorMessage) {
         super();
         this.namespaces = namespaces;
@@ -62,7 +64,15 @@ public class TifValidationSimpleXpathCheck implements TifValidationCheck {
             value = value.toString();
         }
         this.replaceMap.put("found", (String) value);
-        return this.expectedValue.equals(value) || (value instanceof String s && s.matches(this.expectedValue));
+
+        switch (checkType) {
+            case "equals": {
+                return this.expectedValue.equals(value) || (value instanceof String s && s.matches(this.expectedValue));
+            }
+            default:
+                throw new IllegalArgumentException("Unexpected value: " + checkType);
+        }
+
     }
 
     @Override

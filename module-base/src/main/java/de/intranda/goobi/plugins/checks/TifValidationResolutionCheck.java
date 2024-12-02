@@ -14,6 +14,8 @@ import org.jdom2.xpath.XPathFactory;
 
 import de.intranda.goobi.plugins.checks.numbers.ValueRange;
 import de.intranda.goobi.plugins.checks.numbers.ValueRangeFactory;
+import lombok.Getter;
+import lombok.Setter;
 
 public class TifValidationResolutionCheck implements TifValidationCheck {
     public static final String NAME = "resolution_check";
@@ -29,6 +31,10 @@ public class TifValidationResolutionCheck implements TifValidationCheck {
     private final String expectedValue;
     private final String errorMessage;
     private Map<String, String> replaceMap;
+
+    @Getter
+    @Setter
+    private String checkType = "equals";
 
     public TifValidationResolutionCheck(String expectedValue, String errorMessage, String mixUri) {
         if (mixUri != null) {
