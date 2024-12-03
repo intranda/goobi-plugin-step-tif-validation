@@ -2,6 +2,8 @@ package de.intranda.goobi.plugins;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -130,7 +132,10 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
             List<TifValidationCheck> checks = configuration.getChecks();
             for (SimpleEntry<String, String> se : inputOutputList) {
                 try {
-                    jdomDocument = jdomBuilder.build(se.getValue());
+                    // workaround for '#' in file names
+                    String content = Files.readString(Paths.get(se.getValue()), StandardCharsets.UTF_8);
+
+                    jdomDocument = jdomBuilder.build(new StringReader(content));
 
                     for (TifValidationCheck check : checks) {
                         if (!check.check(jdomDocument)) {

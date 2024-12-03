@@ -87,7 +87,10 @@ public class TifValidationConfiguration {
                     }
                 }
                 if (match) {
-                    this.checks.add(new TifValidationSimpleXpathCheck(nsSet, xpath, wantedValue, errorMessage));
+                    TifValidationSimpleXpathCheck check = new TifValidationSimpleXpathCheck(nsSet, xpath, wantedValue, errorMessage);
+                    check.setCheckType(hc.getString("/checkType", "equals"));
+                    check.setOtherXpath(hc.getString("/otherXpath"));
+                    this.checks.add(check);
                     break;
                 }
             }
