@@ -4,8 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.commons.text.StringSubstitutor;
 import org.jdom2.Attribute;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -27,8 +28,9 @@ public class TifValidationSimpleXpathCheck implements TifValidationCheck {
     private String errorMessage;
     private Map<String, String> replaceMap;
 
-    // possible values: equals, greater, lesser, exists, not exists, same
+    // possible values: equals, greater, lesser, exists, not exists, same, multiple
     private String checkType = "equals";
+    private String otherXpath;
 
     public TifValidationSimpleXpathCheck(Set<Namespace> namespaces, String xpath, String expectedValue, String errorMessage) {
         super();
@@ -69,11 +71,65 @@ public class TifValidationSimpleXpathCheck implements TifValidationCheck {
             value = value.toString();
         }
         this.replaceMap.put("found", (String) value);
-
+        String val = (String) value;
         switch (checkType) {
             case "exists":
                 return true;
+            case "greater":
 
+                if (NumberUtils.isCreatable(val)) {
+                    if (val.contains(".")) {
+                        double expected = Double.parseDouble(expectedValue);
+                        double d = Double.parseDouble(val);
+                        return expected <= d;
+                    } else {
+                        int expected = Integer.parseInt(expectedValue);
+                        int i = Integer.parseInt(val);
+                        return expected <= i;
+                    }
+                }
+                // no number
+                return false;
+            case "lesser":
+                if (NumberUtils.isCreatable(val)) {
+                    if (val.contains(".")) {
+                        double expected = Double.parseDouble(expectedValue);
+                        double d = Double.parseDouble(val);
+                        return expected >= d;
+                    } else {
+                        int expected = Integer.parseInt(expectedValue);
+                        int i = Integer.parseInt(val);
+                        return expected >= i;
+                    }
+                }
+                // no number
+                return false;
+            case "same":
+                XPathExpression<Object> o = xFactory.compile(otherXpath, Filters.fpassthrough(), null, namespaces);
+                Object otherValue = o.evaluateFirst(doc);
+                if (otherValue instanceof Element e) {
+                    otherValue = e.getTextTrim();
+                } else if (otherValue instanceof Attribute a) {
+                    otherValue = a.getValue();
+                } else if (otherValue instanceof Text t) {
+                    otherValue = t.getText();
+                } else if (!(otherValue instanceof String)) {
+                    otherValue = otherValue.toString();
+                }
+                return value.equals(otherValue);
+            case "multiple":
+                if (NumberUtils.isCreatable(val)) {
+                    int expexted = Integer.parseInt(expectedValue);
+                    int actual;
+                    if (val.contains(".")) {
+                        actual = (int) Double.parseDouble(val);
+                    } else {
+                        actual = Integer.parseInt(val);
+                    }
+                    return actual % expexted == 0;
+                }
+                // no number
+                return false;
             case "equals": {
                 return this.expectedValue.equals(value) || (value instanceof String s && s.matches(this.expectedValue));
             }
@@ -86,7 +142,7 @@ public class TifValidationSimpleXpathCheck implements TifValidationCheck {
     @Override
     public String getFormattedError(String imageName) {
         this.replaceMap.put("image", imageName);
-        return StrSubstitutor.replace(errorMessage, replaceMap);
+        return StringSubstitutor.replace(errorMessage, replaceMap);
     }
 
 }

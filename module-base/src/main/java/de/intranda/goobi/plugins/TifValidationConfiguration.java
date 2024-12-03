@@ -91,7 +91,6 @@ public class TifValidationConfiguration {
                     break;
                 }
             }
-
         }
 
         //ADD NEW CHECKS HERE
