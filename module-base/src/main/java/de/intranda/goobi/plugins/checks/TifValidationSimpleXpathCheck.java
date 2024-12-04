@@ -70,13 +70,12 @@ public class TifValidationSimpleXpathCheck implements TifValidationCheck {
         } else if (!(value instanceof String)) {
             value = value.toString();
         }
-        this.replaceMap.put("found", (String) value);
         String val = (String) value;
+        this.replaceMap.put("found", val);
         switch (checkType) {
             case "exists":
                 return true;
             case "greater":
-
                 if (NumberUtils.isCreatable(val)) {
                     if (val.contains(".")) {
                         double expected = Double.parseDouble(expectedValue);

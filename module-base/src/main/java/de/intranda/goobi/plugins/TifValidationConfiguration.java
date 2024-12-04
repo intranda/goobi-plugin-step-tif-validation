@@ -124,7 +124,10 @@ public class TifValidationConfiguration {
                         }
                     }
                     if (match) {
-                        this.checks.add(new TifValidationResolutionCheck(wantedValue, errorMessage, mixUri));
+
+                        TifValidationResolutionCheck check = new TifValidationResolutionCheck(wantedValue, errorMessage, mixUri);
+                        check.setCheckType(hc.getString("/checkType", "equals"));
+                        this.checks.add(check);
                         break;
                     }
                 }

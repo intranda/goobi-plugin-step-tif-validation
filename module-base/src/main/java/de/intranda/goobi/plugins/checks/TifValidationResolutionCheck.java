@@ -57,6 +57,7 @@ public class TifValidationResolutionCheck implements TifValidationCheck {
     private void createReplaceMap() {
         this.replaceMap = new HashMap<>();
         this.replaceMap.put("wanted", this.expectedValue);
+        this.replaceMap.put("expected", this.expectedValue);
     }
 
     @Override
@@ -83,13 +84,21 @@ public class TifValidationResolutionCheck implements TifValidationCheck {
                 compressionValueX = resolutionXnum.intValue();
                 compressionValueY = resolutionYnum.intValue();
             }
-            ValueRange range = ValueRangeFactory.create(expectedValue);
-
-            if (range.contains(compressionValueX) && range.contains(compressionValueY)) {
-                return true;
-            } else {
-                this.replaceMap.put("found", compressionValueX + "," + compressionValueY);
-                return false;
+            this.replaceMap.put("found", compressionValueX + "," + compressionValueY);
+            int expected = Integer.parseInt(expectedValue);
+            switch (checkType) {
+                case "equals": {
+                    ValueRange range = ValueRangeFactory.create(expectedValue);
+                    return range.contains(compressionValueX) && range.contains(compressionValueY);
+                }
+                case "same":
+                    return compressionValueX.equals(compressionValueY);
+                case "greater":
+                    return expected <= compressionValueX.intValue() && expected <= compressionValueY.intValue();
+                case "lesser":
+                    return expected >= compressionValueX.intValue() && expected >= compressionValueY.intValue();
+                default:
+                    throw new IllegalArgumentException("Unexpected value: " + checkType);
             }
         }
     }
