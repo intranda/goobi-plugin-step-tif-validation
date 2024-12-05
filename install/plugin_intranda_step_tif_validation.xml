@@ -8,41 +8,157 @@
         <lockAllStepsBetween>true</lockAllStepsBetween>
         <jhoveConfiguration>/opt/digiverso/goobi/config/jhove/jhove.conf</jhoveConfiguration>
         <namespace uri="http://www.loc.gov/mix/v20" name="mix" />
-        <namespace uri="http://hul.harvard.edu/ois/xml/ns/jhove" name="jhove" />
-        <!-- Counter check -->
-        <check>
-            <xpath>count(//jhove:repInfo/jhove:format)</xpath>
-            <wanted>1.0</wanted>
-            <error_message>Check format count for "${image}": Expected value "${wanted}", but found value "${found}".</error_message>
-        </check>
+        <namespace uri="http://schema.openpreservation.org/ois/xml/ns/jhove" name="jhove" />
+
+        <!-- format is 'TIFF' -->
         <check>
             <xpath>string(//jhove:repInfo/jhove:format)</xpath>
             <wanted>TIFF</wanted>
-            <error_message> Check format for "${image}": Expected value "${wanted}", but found value "${found}".</error_message>
+            <error_message> Check format for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
         </check>
-        <!--Check if the image is well-formed and valid -->
+
+        <!-- image is well-formed and valid-->
         <check>
             <xpath>//jhove:repInfo/jhove:status</xpath>
-            <wanted>Well-Formed and valid</wanted>
-            <error_message> Check status for "${image}": Expected value "${wanted}", but found value "${found}".</error_message>
-        </check>
-        <!--Check the color profile -->
+            <wanted value="Well-Formed and valid"></wanted>
+            <error_message> Check status for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
+        </check> 
+        
+        <!-- compression type is 'Uncompressed' -->
         <check>
-            <xpath>string(//mix:iccProfileName)</xpath>
-            <wanted>Adobe RGB (1998)</wanted>
-            <error_message> Check color profile for "${image}": Expected value "${wanted}", but found value "${found}".</error_message>
+            <xpath>//mix:Compression/mix:compressionScheme</xpath>
+            <wanted>Uncompressed</wanted>
+            <error_message>Check compression scheme for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
         </check>
-        <!--Check color depth -->
+
+        <!-- planar configuration -->
+        <check>
+            <xpath>//jhove:property[jhove:name='PlanarConfiguration']/jhove:values/jhove:value</xpath>
+            <wanted>1</wanted>
+            <error_message>Check planar configuration for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
+        </check>
+
+        <!-- byte order -->
+        <check>
+            <xpath>//jhove:property[jhove:name='ByteOrder']/jhove:values/jhove:value</xpath>
+            <wanted>little-endian</wanted>
+            <error_message>Check compression scheme for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
+        </check>
+        
+        <!-- bit order is MSB-to-LSB  -->
+        <check>
+            <xpath>//jhove:property[jhove:name='FillOrder']/jhove:values/jhove:value</xpath>
+            <wanted>1</wanted>
+            <error_message>Check compression scheme for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
+        </check>
+
+        <!-- color space -->
+        <check>
+            <xpath>//mix:PhotometricInterpretation/mix:colorSpace</xpath>
+            <wanted>RGB</wanted>
+            <error_message>Check compression scheme for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
+        </check>
+
+        <!--Check color depth, allowed is 8,8,8 or 16,16,16-->
+        <check>
+            <xpath>string(//mix:samplesPerPixel[1])</xpath>
+            <wanted>3</wanted>
+            <error_message> Check color depth for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
+        </check>
         <check>
             <xpath>string(//mix:bitsPerSampleValue[1])</xpath>
-            <wanted>16</wanted>
-            <error_message> Check color depth for "${image}": Expected value "${wanted}", but found value "${found}".</error_message>
+            <wanted>8|16</wanted>
+            <error_message> Check color depth for "${image}": Expected value is 8 or 16 but found value "${found}".</error_message>
         </check>
-        <!--Check for resolution (number or range) -->
+        <check>
+            <xpath>string(//mix:bitsPerSampleValue[2])</xpath>
+            <wanted>8|16</wanted>
+            <error_message> Check color depth for "${image}": Expected value is 8 or 16 but found value "${found}".</error_message>
+        </check>
+        <check>
+            <xpath>string(//mix:bitsPerSampleValue[2])</xpath>
+            <wanted>8|16</wanted>
+            <error_message> Check color depth for "${image}": Expected value is 8 or 16 but found value "${found}".</error_message>
+        </check>
+
+        <!-- Resolution checks -->
+
+        <!-- values exist -->
+        <check>
+            <xpath>//mix:ImageAssessmentMetadata//mix:SpatialMetrics/mix:xSamplingFrequency/mix:numerator</xpath>
+            <wanted>exists</wanted>
+            <error_message>Check x-axis resolution": value not found".</error_message>
+            <checkType>exists</checkType>
+        </check>
+
+        <check>
+            <xpath>//mix:ImageAssessmentMetadata//mix:SpatialMetrics/mix:ySamplingFrequency/mix:numerator</xpath>
+            <wanted>exists</wanted>
+            <error_message>Check y-axis resolution": value not found".</error_message>
+            <checkType>exists</checkType>
+        </check>
+        <check>
+            <xpath>//mix:ImageAssessmentMetadata//mix:SpatialMetrics/mix:samplingFrequencyUnit</xpath>
+            <wanted>exists</wanted>
+            <error_message>Check resolution unit": value not found".</error_message>
+            <checkType>exists</checkType>
+        </check>        
+        <!-- values are identical -->
+        <check>
+            <xpath>//mix:ImageAssessmentMetadata//mix:SpatialMetrics/mix:xSamplingFrequency/mix:numerator</xpath>
+            <wanted></wanted>
+            <error_message> Check resolution for "${image}": X- and Y-resolution differ.</error_message>
+            <checkType>same</checkType>
+            <otherXpath>//mix:ImageAssessmentMetadata//mix:SpatialMetrics/mix:ySamplingFrequency/mix:numerator</otherXpath>
+        </check>
+        <!-- at least 300 dpi -->
+        <check>
+            <xpath>//mix:ImageAssessmentMetadata//mix:SpatialMetrics/mix:xSamplingFrequency/mix:numerator</xpath>
+            <wanted>300</wanted>
+            <error_message>Check x-axis resolution": Expected value at least "${expected}", but found value "${found}".</error_message>
+            <checkType>greater</checkType>
+        </check>
+        <check>
+            <xpath>//mix:ImageAssessmentMetadata//mix:SpatialMetrics/mix:ySamplingFrequency/mix:numerator</xpath>
+            <wanted>300</wanted>
+            <error_message>Check y-axis resolution": Expected value at least "${expected}", but found value "${found}"".</error_message>
+            <checkType>greater</checkType>
+        </check>
+
+        <!-- get expected resolution from process property -->
         <integrated_check name="resolution_check">
             <mix_uri>http://www.loc.gov/mix/v20</mix_uri>
+            <!-- get the value from the property 'Resolution' -->
+            <wanted value="{process.Resolution}">
+            <!-- only when 'Resolution' contains a numeric value -->
+                <condition value="{process.Resolution}" matches="^\d+" />
+            </wanted>
+            <!-- get the value from a different field, if 'Resolution' contains the value 'other' --> 
+            <wanted value="{process.Special Resolution}">
+                <condition value="{process.Resolution}" matches="other" />
+            </wanted>
+            <!-- default configuration that is used if none of the above conditions apply. 
+            If no default configuration exists and no condition applies, the check is not executed.
+            Can be a fixed value or a range. -->
             <wanted>100.0-899.23</wanted>
-            <error_message> Check resolution for "${image}": Expected value "${wanted}", but found value "${found}".</error_message>
+            <error_message> Check resolution for "${image}": Expected value "${expected}", but found value "${found}".</error_message>
         </integrated_check>
+
+        <!-- resolution values for x-axis and y-axis are the same-->
+        <integrated_check name="resolution_check">
+            <mix_uri>http://www.loc.gov/mix/v20</mix_uri>
+            <wanted>1</wanted>
+            <error_message> Check resolution for "${image}": x-axis and y-axis differ.</error_message>
+            <checkType>same</checkType>
+        </integrated_check>
+
+        <!-- resolution is at least 300 dpi-->
+        <integrated_check name="resolution_check">
+            <mix_uri>http://www.loc.gov/mix/v20</mix_uri>
+            <wanted>300</wanted>
+            <error_message> Check resolution for "${image}": must be at least "${expected}" dpi, but found value "${found}".</error_message>
+            <checkType>greater</checkType>
+        </integrated_check>
+
     </config>
 </config_plugin>

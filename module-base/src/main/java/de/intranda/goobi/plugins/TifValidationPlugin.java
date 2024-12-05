@@ -2,6 +2,8 @@ package de.intranda.goobi.plugins;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -71,7 +73,8 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
         if (configuration.getFolders() == null || configuration.getFolders().isEmpty()) {
             // nothing to validate, continue
 
-            Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, "No folder configured to be validated with TIF validation.", "");
+            Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, "No folder configured to be validated with TIF validation.",
+                    "Image Validation");
 
             return PluginReturnValue.ERROR;
         }
@@ -129,7 +132,10 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
             List<TifValidationCheck> checks = configuration.getChecks();
             for (SimpleEntry<String, String> se : inputOutputList) {
                 try {
-                    jdomDocument = jdomBuilder.build(se.getValue());
+                    // workaround for '#' in file names
+                    String content = Files.readString(Paths.get(se.getValue()), StandardCharsets.UTF_8);
+
+                    jdomDocument = jdomBuilder.build(new StringReader(content));
 
                     for (TifValidationCheck check : checks) {
                         if (!check.check(jdomDocument)) {
@@ -156,7 +162,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
         }
 
         Helper.setMeldung("Tif validation finished.");
-        Helper.addMessageToProcessJournal(process.getId(), LogType.INFO, "The image validation finished successfully.", "");
+        Helper.addMessageToProcessJournal(process.getId(), LogType.INFO, "The image validation finished successfully.", "Image Validation");
 
         return PluginReturnValue.FINISH;
     }
@@ -217,7 +223,7 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
             StepManager.saveStep(stepToOpen);
 
             Helper.addMessageToProcessJournal(process.getId(), LogType.DEBUG, "Open task " + stepToOpen.getTitel() + " because of validation errors.",
-                    "");
+                    "Image Validation");
 
         }
 
@@ -226,12 +232,13 @@ public class TifValidationPlugin implements IStepPluginVersion2 {
     }
 
     private void handleValidationError(String message) {
-        Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, message, "");
+        Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, message, "Image Validation");
     }
 
     private void handleException(Exception e) {
         log.error(e);
-        Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, "The image validation failed with an error. " + e.getMessage(), "");
+        Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, "The image validation failed with an error. " + e.getMessage(),
+                "Image Validation");
     }
 
     @Override

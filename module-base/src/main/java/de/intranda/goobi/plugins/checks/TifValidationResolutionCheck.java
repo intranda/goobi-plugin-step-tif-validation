@@ -14,9 +14,11 @@ import org.jdom2.xpath.XPathFactory;
 
 import de.intranda.goobi.plugins.checks.numbers.ValueRange;
 import de.intranda.goobi.plugins.checks.numbers.ValueRangeFactory;
+import lombok.Getter;
+import lombok.Setter;
 
 public class TifValidationResolutionCheck implements TifValidationCheck {
-    public static String NAME = "resolution_check";
+    public static final String NAME = "resolution_check";
 
     private static Namespace jhove = Namespace.getNamespace("jhove", "http://hul.harvard.edu/ois/xml/ns/jhove");
 
@@ -29,6 +31,10 @@ public class TifValidationResolutionCheck implements TifValidationCheck {
     private final String expectedValue;
     private final String errorMessage;
     private Map<String, String> replaceMap;
+
+    @Getter
+    @Setter
+    private String checkType = "equals";
 
     public TifValidationResolutionCheck(String expectedValue, String errorMessage, String mixUri) {
         if (mixUri != null) {
@@ -51,6 +57,7 @@ public class TifValidationResolutionCheck implements TifValidationCheck {
     private void createReplaceMap() {
         this.replaceMap = new HashMap<>();
         this.replaceMap.put("wanted", this.expectedValue);
+        this.replaceMap.put("expected", this.expectedValue);
     }
 
     @Override
@@ -77,13 +84,21 @@ public class TifValidationResolutionCheck implements TifValidationCheck {
                 compressionValueX = resolutionXnum.intValue();
                 compressionValueY = resolutionYnum.intValue();
             }
-            ValueRange range = ValueRangeFactory.create(expectedValue);
-
-            if (range.contains(compressionValueX) && range.contains(compressionValueY)) {
-                return true;
-            } else {
-                this.replaceMap.put("found", compressionValueX + "," + compressionValueY);
-                return false;
+            this.replaceMap.put("found", compressionValueX + "," + compressionValueY);
+            int expected = Integer.parseInt(expectedValue);
+            switch (checkType) {
+                case "equals": {
+                    ValueRange range = ValueRangeFactory.create(expectedValue);
+                    return range.contains(compressionValueX) && range.contains(compressionValueY);
+                }
+                case "same":
+                    return compressionValueX.equals(compressionValueY);
+                case "greater":
+                    return expected <= compressionValueX.intValue() && expected <= compressionValueY.intValue();
+                case "lesser":
+                    return expected >= compressionValueX.intValue() && expected >= compressionValueY.intValue();
+                default:
+                    throw new IllegalArgumentException("Unexpected value: " + checkType);
             }
         }
     }
