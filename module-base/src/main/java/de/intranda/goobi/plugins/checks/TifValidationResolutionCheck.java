@@ -85,7 +85,7 @@ public class TifValidationResolutionCheck implements TifValidationCheck {
                 compressionValueY = resolutionYnum.intValue();
             }
             this.replaceMap.put("found", compressionValueX + "," + compressionValueY);
-            int expected = Integer.parseInt(expectedValue);
+
             switch (checkType) {
                 case "equals": {
                     ValueRange range = ValueRangeFactory.create(expectedValue);
@@ -94,9 +94,11 @@ public class TifValidationResolutionCheck implements TifValidationCheck {
                 case "same":
                     return compressionValueX.equals(compressionValueY);
                 case "greater":
+                    int expected = Integer.parseInt(expectedValue);
                     return expected <= compressionValueX.intValue() && expected <= compressionValueY.intValue();
                 case "lesser":
-                    return expected >= compressionValueX.intValue() && expected >= compressionValueY.intValue();
+                    int expected2 = Integer.parseInt(expectedValue);
+                    return expected2 >= compressionValueX.intValue() && expected2 >= compressionValueY.intValue();
                 default:
                     throw new IllegalArgumentException("Unexpected value: " + checkType);
             }
