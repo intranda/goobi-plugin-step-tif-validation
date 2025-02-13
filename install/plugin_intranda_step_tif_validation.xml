@@ -76,7 +76,7 @@
             <error_message> Check color depth for "${image}": Expected value is 8 or 16 but found value "${found}".</error_message>
         </check>
         <check>
-            <xpath>string(//mix:bitsPerSampleValue[2])</xpath>
+            <xpath>string(//mix:bitsPerSampleValue[3])</xpath>
             <wanted>8|16</wanted>
             <error_message> Check color depth for "${image}": Expected value is 8 or 16 but found value "${found}".</error_message>
         </check>
