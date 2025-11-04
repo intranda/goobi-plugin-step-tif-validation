@@ -3,6 +3,10 @@ title: Tif-Validation
 identifier: intranda_step_jhove-validation
 published: true
 description: This step plugin allows you to validate images using JHove and customize the workflow
+keywords:
+    - Goobi workflow
+    - Plugin
+    - Step Plugin
 ---
 ## Introduction
 This plugin is used to validate images in `TIF` format within defined directories. The validation is done with the help of the [open source software library JHove](https://jhove.openpreservation.org/) and is extensively configurable.
