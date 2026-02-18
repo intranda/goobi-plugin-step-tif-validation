@@ -38,4 +38,4 @@ jobs:
           prerelease: false
           files: |
             **/target/*.jar
-            install/*
+            install/**
